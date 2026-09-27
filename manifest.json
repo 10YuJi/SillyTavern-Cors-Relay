@@ -1,0 +1,13 @@
+{
+  "display_name": "CORS 跨域中继（原生通道）",
+  "loading_order": 1,
+  "requires": [],
+  "optional": [],
+  "dependencies": [],
+  "js": "index.js",
+  "css": "style.css",
+  "author": "",
+  "version": "1.0.0",
+  "auto_update": false,
+  "homePage": ""
+}

@@ -1,0 +1,54 @@
+/* CORS 跨域中继 —— 面板样式
+   结构沿用酒馆的 inline-drawer，折叠行为与其他扩展一致。 */
+
+.stcr-relay-ver {
+    opacity: 0.6;
+    font-weight: 400;
+    font-size: 0.85em;
+}
+
+/* 折叠时也能看到工作状态的头部徽标 */
+.stcr-relay-badge {
+    margin-left: auto;
+    margin-right: 8px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 0.72em;
+    font-weight: 400;
+    opacity: 0.8;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+}
+
+.stcr-relay-badge-warn {
+    color: #e0a34a;
+    opacity: 1;
+}
+
+.stcr-relay-hint {
+    font-size: 0.8em;
+    opacity: 0.7;
+    line-height: 1.4;
+    margin-bottom: 4px;
+}
+
+.stcr-relay-status {
+    font-size: 0.82em;
+    opacity: 0.85;
+    line-height: 1.4;
+    word-break: break-word;
+    white-space: pre-line;
+    margin-bottom: 6px;
+}
+
+.stcr-relay-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.stcr-relay-actions .menu_button {
+    font-size: 0.85em;
+    padding: 4px 10px;
+    cursor: pointer;
+}
