@@ -1,7 +1,7 @@
 // 全局常量：版本号、中继端点、状态键、透传策略、默认设置。
 // 所有模块共享，避免魔法字符串散落各处。
 
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.0';
 export const EXT_TITLE = 'CORS 跨域中继';
 
 // 设置持久化：extension_settings 下的键名；localStorage 降级键名
@@ -53,8 +53,13 @@ export const DEFAULT_SETTINGS = {
     patchTop: true,      // 接管主窗口自身
     broadPatch: true,    // 广谱接管所有同源帧（兜底无法靠档案识别的应用）
     deepScan: false,     // 扫描三层嵌套 iframe（默认两层）
-    notifyBlocked: true  // 无法接管时提示
+    notifyBlocked: true, // 无法接管时提示
+    windowFilterMode: 'off', // 窗口名单模式：off 不过滤 / blacklist 黑名单 / whitelist 白名单
+    windowFilterList: ''     // 名单规则，每行一条，对窗口标签做包含匹配（不区分大小写）
 };
+
+// 窗口名单模式的合法取值（入口校验用）
+export const WINDOW_FILTER_MODES = ['off', 'blacklist', 'whitelist'];
 
 // 扩展可能装在 public/scripts/extensions/third-party/<name> 或 data/<user>/extensions/<name>，
 // 两者相对层级不同，故列出全部候选逐个尝试。

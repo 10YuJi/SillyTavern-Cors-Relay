@@ -1,5 +1,6 @@
 // 目标窗口识别：判断某个 iframe / window 是否需要装代理。
 // 识别依据全部来自 src/profiles.js 的场景档案；广谱兜底不依赖档案。
+// 窗口白/黑名单（filterAllows）在识别之后裁决：名单命中可推翻识别结论。
 
 import { PROFILES } from './profiles.js';
 
@@ -90,4 +91,19 @@ export function frameLabel(frame) {
 export function shouldPatch(win, frame, settings) {
     if (identify(win, frame)) return true;
     return Boolean(settings.broadPatch);
+}
+
+// 窗口白/黑名单：规则对窗口标签（诊断信息里的键名）做包含匹配，不区分大小写。
+// 黑名单＝命中即排除；白名单＝命中才接管；名单为空时一律放行，避免白名单空规则误伤全部窗口。
+export function filterAllows(label, settings) {
+    const mode = settings.windowFilterMode;
+    if (mode !== 'blacklist' && mode !== 'whitelist') return true;
+    const rules = String(settings.windowFilterList || '')
+        .split(/\r?\n/)
+        .map(line => line.trim().toLowerCase())
+        .filter(Boolean);
+    if (!rules.length) return true;
+    const value = String(label || '').toLowerCase();
+    const hit = rules.some(rule => value.includes(rule));
+    return mode === 'blacklist' ? !hit : hit;
 }

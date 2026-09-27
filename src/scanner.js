@@ -2,12 +2,24 @@
 // 所有定时器统一登记，便于整体停止。
 
 import { SCAN_INTERVAL_MS, VERSION, WIN_KEYS } from './constants.js';
-import { shouldPatch, isSandboxIsolated, frameLabel } from './targets.js';
+import { shouldPatch, isSandboxIsolated, frameLabel, filterAllows } from './targets.js';
 
-export function createScanner({ patcher, settings, topWin }) {
+export function createScanner({ patcher, settings, diag, topWin }) {
     const timers = [];
     const intervals = [];
     const observers = [];
+
+    // 安装或按名单排除：排除时若此前已装代理，则当场还原原始 fetch。
+    // 前提：调用方已确认该窗口原本应被接管（patchTop / shouldPatch 已通过）。
+    function installOrFilter(win, label) {
+        if (filterAllows(label, settings)) {
+            delete diag.filtered[label];
+            patcher.install(win, label);
+        } else {
+            diag.filtered[label] = Date.now();
+            patcher.uninstall(win, label);
+        }
+    }
 
     function scanFramesIn(doc, depth, rootLabel) {
         if (!doc || !doc.querySelectorAll || depth < 0) return;
@@ -23,7 +35,7 @@ export function createScanner({ patcher, settings, topWin }) {
             const label = rootLabel ? `${rootLabel} > ${frameLabel(frame)}` : frameLabel(frame);
             if (!shouldPatch(win, frame, settings)) continue;
 
-            patcher.install(win, label);
+            installOrFilter(win, label);
 
             // 广谱模式下限制递归深度，避免遍历整棵 iframe 树
             const nextDepth = settings.broadPatch ? Math.min(depth - 1, 1) : depth - 1;
@@ -40,7 +52,7 @@ export function createScanner({ patcher, settings, topWin }) {
     function scanWindowDeep(win, label) {
         if (!win) return;
         try {
-            if (shouldPatch(win, null, settings)) patcher.install(win, label || 'window');
+            if (shouldPatch(win, null, settings)) installOrFilter(win, label || 'window');
         } catch (error) { /* 忽略 */ }
         let doc = null;
         try {
@@ -50,7 +62,7 @@ export function createScanner({ patcher, settings, topWin }) {
     }
 
     function scan() {
-        if (settings.patchTop) patcher.install(topWin, '主窗口');
+        if (settings.patchTop) installOrFilter(topWin, '主窗口');
         let doc = null;
         try {
             doc = topWin.document;

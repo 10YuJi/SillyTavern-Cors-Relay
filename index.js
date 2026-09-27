@@ -5,7 +5,7 @@
 // 本文件只做装配：探测宿主 -> 载入设置 -> 组装各模块 -> 启动扫描与面板。
 // 具体实现见 src/ 下的各模块。
 
-import { VERSION, WIN_KEYS, NOTIFY_THROTTLE_MS } from './src/constants.js';
+import { VERSION, WIN_KEYS, NOTIFY_THROTTLE_MS, WINDOW_FILTER_MODES } from './src/constants.js';
 import { createPlatform } from './src/platform.js';
 import { createSettingsStore } from './src/settings.js';
 import { createDiagnostics } from './src/diagnostics.js';
@@ -49,7 +49,7 @@ async function main() {
 
     const relay = createRelay({ platform, diag: diagnostics.state, notify });
     const patcher = createPatcher({ relay, settings, diag: diagnostics.state, topWin });
-    const scanner = createScanner({ patcher, settings, topWin });
+    const scanner = createScanner({ patcher, settings, diag: diagnostics.state, topWin });
 
     let blockedNotified = false;
     function maybeNotifyBlocked() {
@@ -76,9 +76,22 @@ async function main() {
                     scanner.scan();
                 }
             },
+            onWindowFilter: async (key, value) => {
+                if (key === 'windowFilterMode') {
+                    if (!WINDOW_FILTER_MODES.includes(value)) return;
+                } else if (key === 'windowFilterList') {
+                    if (typeof value !== 'string') return;
+                } else {
+                    return;
+                }
+                await store.update(key, value);
+                scanner.scan(); // 立即按新名单装/卸代理
+                scanner.scheduleScan();
+            },
             onRescan: () => {
                 blockedNotified = false;
                 diagnostics.state.blocked = {};
+                diagnostics.state.filtered = {};
                 scanner.scan();
             },
             onCopy: () => {

@@ -154,5 +154,23 @@ export function createPatcher({ relay, settings, diag, topWin }) {
         }
     }
 
-    return { install };
+    // 按名单取消接管：恢复原始 fetch 并清掉本扩展的标记。
+    // 仅当当前 fetch 仍是自己的代理时才还原，避免拆掉其他扩展叠在更外层的包装。
+    function uninstall(win, label) {
+        try {
+            const current = win && win.fetch;
+            if (current && current[PROXY_TAG] && typeof current[PROXY_ORIGINAL] === 'function') {
+                win.fetch = current[PROXY_ORIGINAL];
+                console.info(`[CORS中继] 已按名单取消接管 (${label})`);
+            }
+            try { delete win[WIN_KEYS.installed]; } catch (error) { /* 忽略 */ }
+            try { delete win[WIN_KEYS.status]; } catch (error) { /* 忽略 */ }
+            delete diag.installed[label];
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    return { install, uninstall };
 }

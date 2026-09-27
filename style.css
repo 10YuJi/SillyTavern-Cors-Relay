@@ -52,3 +52,35 @@
     padding: 4px 10px;
     cursor: pointer;
 }
+
+/* 窗口白/黑名单 */
+.stcr-relay-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 6px 0;
+}
+
+.stcr-relay-filter select,
+.stcr-relay-filter textarea {
+    width: 100%;
+    padding: 4px 8px;
+    font: inherit;
+    font-size: 0.85em;
+    color: var(--SmartThemeBodyColor, inherit);
+    background: var(--SmartThemeBlurTintColor, rgba(0, 0, 0, 0.25));
+    border: 1px solid var(--SmartThemeBorderColor, rgba(128, 128, 128, 0.4));
+    border-radius: 5px;
+    box-sizing: border-box;
+    opacity: 0.9;
+}
+
+.stcr-relay-filter textarea {
+    resize: vertical;
+    min-height: 3em;
+    line-height: 1.4;
+}
+
+.stcr-relay-filter select option {
+    background: var(--SmartThemeBlurTintColor, #161616);
+}

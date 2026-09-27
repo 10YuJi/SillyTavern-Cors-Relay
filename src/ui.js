@@ -19,6 +19,18 @@ function template() {
                     <span>${item.label}</span>
                 </label>`).join('');
 
+    // 窗口白/黑名单：模式下拉框 + 多行规则
+    const filterBlock = `
+            <div class="stcr-relay-filter">
+                <select id="stcr-relay-filter-mode">
+                    <option value="off">不过滤：接管全部窗口</option>
+                    <option value="blacklist">黑名单：命中的窗口不接管</option>
+                    <option value="whitelist">白名单：只接管命中的窗口</option>
+                </select>
+                <textarea id="stcr-relay-filter-list" rows="3" placeholder="每行一条，对窗口标签做包含匹配（不区分大小写）&#10;例：TH-script--Kimi前缀预填充&#10;例：梦境创客工作台"></textarea>
+                <div class="stcr-relay-hint">标签即诊断信息「接管目标」的名称（主窗口 / 弹出窗口 / iframe 标题）。规则匹配完整路径，排除某窗口会连同其子窗口；改动后自动重扫，被排除窗口的代理会当场还原。</div>
+            </div>`;
+
     return `
     <div class="inline-drawer" id="stcr-relay-drawer">
         <div class="inline-drawer-toggle inline-drawer-header">
@@ -28,6 +40,7 @@ function template() {
         </div>
         <div class="inline-drawer-content">
             ${checkboxes}
+            ${filterBlock}
             <div class="stcr-relay-hint">仅 OpenAI 兼容（聊天补全）接口可中继；Responses / Anthropic / Gemini 请在应用内切换接口类型。</div>
             <div class="stcr-relay-status" id="stcr-relay-status">—</div>
             <div class="stcr-relay-actions">
@@ -77,6 +90,18 @@ export function mountPanel({ win, settings, diagnostics, actions }) {
             });
     }
 
+    $drawer.find('#stcr-relay-filter-mode')
+        .val(String(settings.windowFilterMode || 'off'))
+        .on('change', function () {
+            actions.onWindowFilter('windowFilterMode', String($(this).val() || 'off'));
+        });
+
+    $drawer.find('#stcr-relay-filter-list')
+        .val(String(settings.windowFilterList || ''))
+        .on('change', function () {
+            actions.onWindowFilter('windowFilterList', String($(this).val() || ''));
+        });
+
     $drawer.find('#stcr-relay-scan').on('click', () => actions.onRescan());
     $drawer.find('#stcr-relay-copy').on('click', () => actions.onCopy());
 
@@ -85,6 +110,7 @@ export function mountPanel({ win, settings, diagnostics, actions }) {
             const stats = diagnostics.collect();
             const installed = Object.keys(diagnostics.state.installed).length;
             const blocked = Object.keys(diagnostics.state.blocked);
+            const filtered = Object.keys(diagnostics.state.filtered || {});
             const unsupported = Object.keys(diagnostics.state.unsupported || {});
             const scenarios = diagnostics.scenarios();
 
@@ -98,6 +124,7 @@ export function mountPanel({ win, settings, diagnostics, actions }) {
                 , `已中转：${stats.relayed}`
                 , `失败：${stats.failed}`];
             if (blocked.length) parts.push(`跨域未接管：${blocked.length}`);
+            if (filtered.length) parts.push(`名单排除：${filtered.length}`);
             if (unsupported.length) parts.push(`不支持的接口：${unsupported.join('、')}`);
             if (stats.lastError) parts.push(`最近错误：${stats.lastError.slice(0, 60)}`);
             $status.text(parts.join(' ｜ '));
